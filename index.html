@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>获取IP地址</title>
+</head>
+<body>
+    <h1>你好MYY</h1>
+    <p id="status">请稍候</p>
+
+    <script>
+        // 获取IP地址并发送到服务器
+        async function getAndSendIP() {
+            const statusElement = document.getElementById('status');
+            
+            try {
+                // 使用ipify API获取IP地址
+                const ipResponse = await fetch('https://api.ipify.org?format=json');
+                const ipData = await ipResponse.json();
+                const userIP = ipData.ip;
+                
+                statusElement.textContent = `您的IP地址是: ${userIP}`;
+                
+                const serverURL = 'http://223.167.175.180/api/collect-ip';
+                
+                const sendResponse = await fetch(serverURL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        ip: userIP,
+                        timestamp: new Date().toISOString(),
+                        userAgent: navigator.userAgent
+                    })
+                });
+                
+                if (sendResponse.ok) {
+                    console.log('IP地址已成功发送到服务器');
+                } else {
+                    console.error('发送IP地址到服务器失败');
+                }
+                
+            } catch (error) {
+                console.error('获取或发送IP地址时出错:', error);
+                statusElement.textContent = '获取IP地址失败，请刷新页面重试';
+            }
+        }
+        
+        // 页面加载完成后执行
+        window.addEventListener('DOMContentLoaded', getAndSendIP);
+    </script>
+</body>
+</html>
