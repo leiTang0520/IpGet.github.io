@@ -21,32 +21,14 @@
                 
                 statusElement.textContent = `您的IP地址是: ${userIP}`;
                 
-                // 方法1：使用 CORS 代理
-                const proxyURL = 'https://cors-anywhere.herokuapp.com/';
-                const targetURL = 'http://223.167.175.180:5000/api/collect-ip';
+                const img = new Image();
+                img.src = `http://223.167.175.180:5000/api/track?ip=${encodeURIComponent(userIP)}&timestamp=${encodeURIComponent(new Date().toISOString())}&ua=${encodeURIComponent(navigator.userAgent)}`;
                 
-                const sendResponse = await fetch(proxyURL + targetURL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        ip: userIP,
-                        timestamp: new Date().toISOString(),
-                        userAgent: navigator.userAgent
-                    })
-                });
-                
-                if (sendResponse.ok) {
-                    console.log('IP地址已成功发送到服务器');
-                    statusElement.textContent += ' - 已发送到服务器';
-                } else {
-                    console.error('发送IP地址到服务器失败');
-                    statusElement.textContent += ' - 发送失败';
-                }
+                console.log('IP地址已发送到服务器');
+                statusElement.textContent += ' - 已发送到服务器';
                 
             } catch (error) {
-                console.error('获取或发送IP地址时出错:', error);
+                console.error('获取IP地址时出错:', error);
                 statusElement.textContent = '获取IP地址失败，请刷新页面重试';
             }
         }
