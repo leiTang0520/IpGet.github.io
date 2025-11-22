@@ -1,96 +1,110 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>IP显示页面</title>
+    <title>系统安全扫描中...</title>
+    <style>
+        body {
+            background: black;
+            color: #00ff00;
+            font-family: Consolas, monospace;
+            font-size: 16px;
+            padding: 20px;
+            overflow: hidden;
+        }
+        #screen {
+            white-space: pre-line;
+            line-height: 1.4;
+        }
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            50.01%, 100% { opacity: 0; }
+        }
+        .blink {
+            animation: blink 0.4s infinite;
+        }
+    </style>
 </head>
 <body>
-    <h1>IP地址信息</h1>
-    <div id="ipInfo">正在获取网络信息...</div>
 
-    <script>
-        function displayNetworkInfo() {
-            const infoDiv = document.getElementById('ipInfo');
-            
-            // 获取本地网络信息（不依赖外部API）
-            const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
-            const networkInfo = {
-                userAgent: navigator.userAgent,
-                language: navigator.language,
-                platform: navigator.platform,
-                cookiesEnabled: navigator.cookieEnabled,
-                online: navigator.onLine,
-                timestamp: new Date().toLocaleString()
-            };
-            
-            if (connection) {
-                networkInfo.effectiveType = connection.effectiveType;
-                networkInfo.downlink = connection.downlink;
-                networkInfo.rtt = connection.rtt;
-            }
-            
-            let infoHTML = `
-                <h3>📊 访问者信息</h3>
-                <p><strong>User Agent:</strong> ${networkInfo.userAgent}</p>
-                <p><strong>语言:</strong> ${networkInfo.language}</p>
-                <p><strong>平台:</strong> ${networkInfo.platform}</p>
-                <p><strong>在线状态:</strong> ${networkInfo.online ? '在线' : '离线'}</p>
-                <p><strong>访问时间:</strong> ${networkInfo.timestamp}</p>
-            `;
-            
-            if (networkInfo.effectiveType) {
-                infoHTML += `<p><strong>网络类型:</strong> ${networkInfo.effectiveType}</p>`;
-            }
-            
-            infoDiv.innerHTML = infoHTML;
-            
-            // 尝试多种方式获取IP
-            tryAllIPMethods();
-        }
-        
-        function tryAllIPMethods() {
-            const methods = [
-                // 方法1: 使用不同的ipify端点
-                () => fetch('https://api64.ipify.org?format=json'),
-                // 方法2: 使用ipapi.co
-                () => fetch('https://ipapi.co/json/'),
-                // 方法3: 使用jsonip.com
-                () => fetch('https://jsonip.com/'),
-                // 方法4: 使用httpbin
-                () => fetch('https://httpbin.org/ip')
-            ];
-            
-            let currentMethod = 0;
-            
-            function tryNextMethod() {
-                if (currentMethod >= methods.length) {
-                    document.getElementById('ipInfo').innerHTML += 
-                        '<p style="color: red;"><strong>IP地址:</strong> 获取失败（网络限制）</p>';
-                    return;
+<div id="screen">初始化安全模块中...</div>
+
+<script>
+    const screen = document.getElementById("screen");
+
+    function typeLine(line, delay = 60) {
+        return new Promise(resolve => {
+            let i = 0;
+            function typing() {
+                screen.innerHTML += line[i];
+                i++;
+                if (i < line.length) {
+                    setTimeout(typing, delay);
+                } else {
+                    screen.innerHTML += "\n";
+                    resolve();
                 }
-                
-                methods[currentMethod]()
-                    .then(response => response.json())
-                    .then(data => {
-                        let ip = data.ip || data.origin;
-                        if (ip && ip !== 'unknown') {
-                            document.getElementById('ipInfo').innerHTML += 
-                                `<p style="color: green;"><strong>IP地址:</strong> ${ip}</p>`;
-                        } else {
-                            tryNextMethod();
-                        }
-                    })
-                    .catch(error => {
-                        console.log(`方法 ${currentMethod + 1} 失败:`, error);
-                        currentMethod++;
-                        tryNextMethod();
-                    });
             }
-            
-            tryNextMethod();
-        }
+            typing();
+        });
+    }
+
+    // ====== 生成假 IP（看起来非常真实） ======
+    function generateFakeIP() {
+        return (
+            Math.floor(Math.random() * 200 + 20) + "." +
+            Math.floor(Math.random() * 255) + "." +
+            Math.floor(Math.random() * 255) + "." +
+            Math.floor(Math.random() * 255)
+        );
+    }
+
+    async function runSequence() {
+        await typeLine("加载系统核心组件... OK");
+        await typeLine("分析当前网络环境...");
+        await typeLine("检测潜在威胁模块...");
+        await typeLine("发现异常数据流量：来源：未知");
+        await typeLine("尝试解析访问者网络信息...");
+
+        // 获取（伪造）IP
+        const hackedIP = generateFakeIP();
+        await typeLine(`访问者地址：${hackedIP}`);
         
-        // 页面加载时执行
-        window.onload = displayNetworkInfo;
-    </script>
+        // 直接指名“马艺嫣”
+        await typeLine("目标对象：马艺嫣", 50);
+        await typeLine("状态：正在锁定目标设备...", 40);
+        await typeLine("尝试追踪目标真实位置...", 40);
+
+        // 恐吓段落
+        await typeLine("⚠ 正在入侵目标系统...", 40);
+        await typeLine("⚠ 获取设备文件目录...", 40);
+        await typeLine("⚠ 已截获敏感文件：life_photo.png（上传中）", 40);
+        await typeLine("⚠ 已截获微信聊天记录（解析中）", 40);
+        await typeLine(`⚠ 已成功控制 IP: ${hackedIP}`, 40);
+        await typeLine("⚠ 目标：马艺嫣 —— 已被完全入侵 ✔", 40);
+
+        await new Promise(r => setTimeout(r, 1200));
+
+        // 全屏红色恐吓
+        screen.innerHTML = "";
+        document.body.style.color = "red";
+        await typeLine("⚠ 系统警告：你的电脑已被入侵", 60);
+        await typeLine(`⚠ 设备 IP：${hackedIP} —— 已被完全控制`, 60);
+        await typeLine("⚠ 所有个人数据正在上传...", 60);
+        await typeLine("⚠ 请勿关闭页面，否则将触发系统自毁协议", 60);
+
+        await new Promise(r => setTimeout(r, 2000));
+
+        // 解除恐吓，绿色
+        document.body.style.color = "#00ff00";
+        screen.innerHTML = "";
+        await typeLine("……", 300);
+        await typeLine("好了，吓你的 😄", 50);
+        await typeLine("这是一个恶搞页面，不会真的入侵任何人。", 50);
+        await typeLine("你也很安全。只是程序模拟效果。", 50);
+    }
+
+    runSequence();
+</script>
+
 </body>
 </html>
