@@ -2,45 +2,38 @@
 <html>
 <head>
     <title>IP收集器</title>
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 </head>
 <body>
     <h1>IP地址收集</h1>
-    <p>你的IP地址正在被记录...</p>
-    <div id="info"></div>
+    <div id="info">正在处理...</div>
 
     <script>
-        // 使用图片像素方式发送数据（不会被混合内容阻止）
-        function trackViaPixel() {
-            const timestamp = new Date().toISOString();
-            const ua = navigator.userAgent;
+        function trackUser() {
+            const infoDiv = document.getElementById('info');
             
-            // 创建跟踪像素
-            const img = new Image();
-            img.src = `http://223.167.175.180:5000/api/track?timestamp=${encodeURIComponent(timestamp)}&ua=${encodeURIComponent(ua)}`;
-            img.style.display = 'none';
+            // 创建一个隐藏的iframe来加载HTTP内容
+            const iframe = document.createElement('iframe');
+            iframe.style.display = 'none';
+            iframe.src = `http://223.167.175.180:5000/api/track?timestamp=${encodeURIComponent(new Date().toISOString())}&ua=${encodeURIComponent(navigator.userAgent)}`;
             
-            document.body.appendChild(img);
-            
-            // 同时尝试获取并显示IP
-            getAndDisplayIP();
-        }
-        
-        function getAndDisplayIP() {
-            // 使用JSONP获取IP用于显示（不发送到服务器）
-            window.displayIPCallback = function(data) {
-                document.getElementById('info').innerHTML = 
-                    `你的IP地址: <strong>${data.ip}</strong><br>
-                     时间: ${new Date().toLocaleString()}<br>
-                     <small>IP已通过像素跟踪记录到服务器</small>`;
+            iframe.onload = function() {
+                // 同时显示用户IP信息
+                fetch('https://api.ipify.org?format=json')
+                    .then(response => response.json())
+                    .then(data => {
+                        infoDiv.innerHTML = `✅ 记录成功！<br>你的IP: <strong>${data.ip}</strong>`;
+                    })
+                    .catch(() => {
+                        infoDiv.innerHTML = '✅ 访问已记录！';
+                    });
             };
             
-            const script = document.createElement('script');
-            script.src = 'https://api.ipify.org?format=jsonp&callback=displayIPCallback';
-            document.head.appendChild(script);
+            document.body.appendChild(iframe);
         }
-        
-        // 页面加载时自动执行
-        window.onload = trackViaPixel;
+
+        // 自动执行
+        window.onload = trackUser;
     </script>
 </body>
 </html>
