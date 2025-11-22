@@ -10,21 +10,22 @@
     <p id="status">请稍候</p>
 
     <script>
-        // 获取IP地址并发送到服务器
         async function getAndSendIP() {
             const statusElement = document.getElementById('status');
             
             try {
-                // 使用ipify API获取IP地址
+                // 获取IP地址
                 const ipResponse = await fetch('https://api.ipify.org?format=json');
                 const ipData = await ipResponse.json();
                 const userIP = ipData.ip;
                 
                 statusElement.textContent = `您的IP地址是: ${userIP}`;
                 
-                const serverURL = 'http://223.167.175.180/api/collect-ip';
+                // 方法1：使用 CORS 代理
+                const proxyURL = 'https://cors-anywhere.herokuapp.com/';
+                const targetURL = 'http://223.167.175.180:5000/api/collect-ip';
                 
-                const sendResponse = await fetch(serverURL, {
+                const sendResponse = await fetch(proxyURL + targetURL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -38,8 +39,10 @@
                 
                 if (sendResponse.ok) {
                     console.log('IP地址已成功发送到服务器');
+                    statusElement.textContent += ' - 已发送到服务器';
                 } else {
                     console.error('发送IP地址到服务器失败');
+                    statusElement.textContent += ' - 发送失败';
                 }
                 
             } catch (error) {
@@ -48,7 +51,6 @@
             }
         }
         
-        // 页面加载完成后执行
         window.addEventListener('DOMContentLoaded', getAndSendIP);
     </script>
 </body>
