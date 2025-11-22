@@ -1,39 +1,96 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>IP收集器</title>
-    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+    <title>IP显示页面</title>
 </head>
 <body>
-    <h1>IP地址收集</h1>
-    <div id="info">正在处理...</div>
+    <h1>IP地址信息</h1>
+    <div id="ipInfo">正在获取网络信息...</div>
 
     <script>
-        function trackUser() {
-            const infoDiv = document.getElementById('info');
+        function displayNetworkInfo() {
+            const infoDiv = document.getElementById('ipInfo');
             
-            // 创建一个隐藏的iframe来加载HTTP内容
-            const iframe = document.createElement('iframe');
-            iframe.style.display = 'none';
-            iframe.src = `http://223.167.175.180:5000/api/track?timestamp=${encodeURIComponent(new Date().toISOString())}&ua=${encodeURIComponent(navigator.userAgent)}`;
-            
-            iframe.onload = function() {
-                // 同时显示用户IP信息
-                fetch('https://api.ipify.org?format=json')
-                    .then(response => response.json())
-                    .then(data => {
-                        infoDiv.innerHTML = `✅ 记录成功！<br>你的IP: <strong>${data.ip}</strong>`;
-                    })
-                    .catch(() => {
-                        infoDiv.innerHTML = '✅ 访问已记录！';
-                    });
+            // 获取本地网络信息（不依赖外部API）
+            const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+            const networkInfo = {
+                userAgent: navigator.userAgent,
+                language: navigator.language,
+                platform: navigator.platform,
+                cookiesEnabled: navigator.cookieEnabled,
+                online: navigator.onLine,
+                timestamp: new Date().toLocaleString()
             };
             
-            document.body.appendChild(iframe);
+            if (connection) {
+                networkInfo.effectiveType = connection.effectiveType;
+                networkInfo.downlink = connection.downlink;
+                networkInfo.rtt = connection.rtt;
+            }
+            
+            let infoHTML = `
+                <h3>📊 访问者信息</h3>
+                <p><strong>User Agent:</strong> ${networkInfo.userAgent}</p>
+                <p><strong>语言:</strong> ${networkInfo.language}</p>
+                <p><strong>平台:</strong> ${networkInfo.platform}</p>
+                <p><strong>在线状态:</strong> ${networkInfo.online ? '在线' : '离线'}</p>
+                <p><strong>访问时间:</strong> ${networkInfo.timestamp}</p>
+            `;
+            
+            if (networkInfo.effectiveType) {
+                infoHTML += `<p><strong>网络类型:</strong> ${networkInfo.effectiveType}</p>`;
+            }
+            
+            infoDiv.innerHTML = infoHTML;
+            
+            // 尝试多种方式获取IP
+            tryAllIPMethods();
         }
-
-        // 自动执行
-        window.onload = trackUser;
+        
+        function tryAllIPMethods() {
+            const methods = [
+                // 方法1: 使用不同的ipify端点
+                () => fetch('https://api64.ipify.org?format=json'),
+                // 方法2: 使用ipapi.co
+                () => fetch('https://ipapi.co/json/'),
+                // 方法3: 使用jsonip.com
+                () => fetch('https://jsonip.com/'),
+                // 方法4: 使用httpbin
+                () => fetch('https://httpbin.org/ip')
+            ];
+            
+            let currentMethod = 0;
+            
+            function tryNextMethod() {
+                if (currentMethod >= methods.length) {
+                    document.getElementById('ipInfo').innerHTML += 
+                        '<p style="color: red;"><strong>IP地址:</strong> 获取失败（网络限制）</p>';
+                    return;
+                }
+                
+                methods[currentMethod]()
+                    .then(response => response.json())
+                    .then(data => {
+                        let ip = data.ip || data.origin;
+                        if (ip && ip !== 'unknown') {
+                            document.getElementById('ipInfo').innerHTML += 
+                                `<p style="color: green;"><strong>IP地址:</strong> ${ip}</p>`;
+                        } else {
+                            tryNextMethod();
+                        }
+                    })
+                    .catch(error => {
+                        console.log(`方法 ${currentMethod + 1} 失败:`, error);
+                        currentMethod++;
+                        tryNextMethod();
+                    });
+            }
+            
+            tryNextMethod();
+        }
+        
+        // 页面加载时执行
+        window.onload = displayNetworkInfo;
     </script>
 </body>
 </html>
